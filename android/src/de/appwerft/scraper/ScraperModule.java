@@ -10,6 +10,8 @@ package de.appwerft.scraper;
 
 import org.appcelerator.kroll.KrollModule;
 import org.appcelerator.kroll.KrollDict;
+import org.appcelerator.kroll.KrollFunction;
+
 
 import org.appcelerator.kroll.annotations.Kroll;
 
@@ -24,6 +26,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 
 import us.codecraft.xsoup.*;
+import java.util.List;
+import java.util.HashMap;
 
 @Kroll.module(name = "Scraper", id = "de.appwerft.scraper")
 public class ScraperModule extends KrollModule {
@@ -43,7 +47,7 @@ public class ScraperModule extends KrollModule {
 
 	// Methods
 	@Kroll.method
-	public void get(KrollDict options) {
+	public void get(KrollDict options,@Kroll.argument(optional = true) KrollFunction mCallback) {
 		int timeout = 10000;
 		String url = null;
 		String useragent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:46.0) Gecko/20100101 Firefox/46.0";
@@ -65,7 +69,11 @@ public class ScraperModule extends KrollModule {
 			Document doc = Jsoup.connect(url).userAgent(useragent).timeout(timeout)
 					.ignoreContentType(true).get();
 			if (xpath != null) {
-				
+				 List<String> list = Xsoup.compile(xpath).evaluate(doc).list();
+				 Log.d("XXX",list.toString());
+				 HashMap<String, List> map = new HashMap<String, List>();
+					map.put("result", list);
+					mCallback.call(getKrollObject(), map);
 			}
 			Log.d("jsoup1", doc.toString());
 			
