@@ -10,13 +10,17 @@ Usage
 
 ~~~
 var Scraper = require('de.appwerft.scraper');
-    Scraper.get({
-        url : "http://google.com",
-        xpath : "//a/@href"
-        },function(_e){
+Scraper.get({
+    url : "http://dradiowissen.de/early-bird/p1",
+    xpath : "//figure[@class=teaser__image]/button"
+    },function(_e){
+        _e.list.forEach(function(_e){
             console.log(_e);
     });
+});
 ~~~
+
+
 
 INSTALL YOUR MODULE
 -------------------

@@ -12,7 +12,6 @@ import org.appcelerator.kroll.KrollModule;
 import org.appcelerator.kroll.KrollDict;
 import org.appcelerator.kroll.KrollFunction;
 
-
 import org.appcelerator.kroll.annotations.Kroll;
 
 import org.appcelerator.titanium.TiApplication;
@@ -33,11 +32,13 @@ import java.util.HashMap;
 public class ScraperModule extends KrollModule {
 
 	// Standard Debugging variables
-	private static final String LCAT = "ScraperModule";   
+	private static final String LCAT = "ScraperModule";
+
 	// @Kroll.constant public static final String EXTERNAL_NAME = value;
 	public ScraperModule() {
 		super();
 	}
+
 	@Kroll.onAppCreate
 	public static void onAppCreate(TiApplication app) {
 		Log.d(LCAT, "inside onAppCreate");
@@ -47,12 +48,13 @@ public class ScraperModule extends KrollModule {
 
 	// Methods
 	@Kroll.method
-	public void get(KrollDict options,@Kroll.argument(optional = true) KrollFunction mCallback) {
+	public void get(KrollDict options,
+			@Kroll.argument(optional = true) KrollFunction mCallback) {
 		int timeout = 10000;
 		String url = null;
 		String useragent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:46.0) Gecko/20100101 Firefox/46.0";
-		String xpath = null;
-		
+		String xpath = "//";
+
 		if (options.containsKey("timeout")) {
 			timeout = options.getInt("timeout");
 		}
@@ -66,23 +68,21 @@ public class ScraperModule extends KrollModule {
 			useragent = options.getString("useragent");
 		}
 		try {
-			Document doc = Jsoup.connect(url).userAgent(useragent).timeout(timeout)
-					.ignoreContentType(true).get();
+			Document doc = Jsoup.connect(url).userAgent(useragent)
+					.timeout(timeout).ignoreContentType(true).get();
 			if (xpath != null) {
-				 List<String> list = Xsoup.compile(xpath).evaluate(doc).list();
-				 Log.d("XXX",list.toString());
-				 HashMap<String, List> map = new HashMap<String, List>();
-					map.put("result", list);
-					mCallback.call(getKrollObject(), map);
+				List<String> list = Xsoup.compile(xpath).evaluate(doc).list();
+				HashMap<String, Object> map = new HashMap<String, Object>();
+				map.put("list", list.toArray());
+				mCallback.call(getKrollObject(), map);
 			}
-			Log.d("jsoup1", doc.toString());
-			
+	
 		} catch (MalformedURLException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		
+
 	}
 
 }
