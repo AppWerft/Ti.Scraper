@@ -6,14 +6,14 @@
  * Please see the LICENSE included with this distribution for details.
  *
  */
+
+// http://billdawson.com/using-custom-titanium-modules-for-performance/
 package de.appwerft.scraper;
 
 import org.appcelerator.kroll.KrollModule;
 import org.appcelerator.kroll.KrollDict;
 import org.appcelerator.kroll.KrollFunction;
-
 import org.appcelerator.kroll.annotations.Kroll;
-
 import org.appcelerator.titanium.TiApplication;
 import org.appcelerator.kroll.common.Log;
 //import org.appcelerator.kroll.common.TiConfig;
@@ -25,14 +25,20 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 
 import us.codecraft.xsoup.*;
+
 import java.util.List;
 import java.util.HashMap;
+
+import android.os.AsyncTask;
+
+import java.net.URL;
 
 @Kroll.module(name = "Scraper", id = "de.appwerft.scraper")
 public class ScraperModule extends KrollModule {
 
 	// Standard Debugging variables
 	private static final String LCAT = "ScraperModule";
+	public KrollFunction mCallback;
 
 	// @Kroll.constant public static final String EXTERNAL_NAME = value;
 	public ScraperModule() {
@@ -48,41 +54,50 @@ public class ScraperModule extends KrollModule {
 
 	// Methods
 	@Kroll.method
-	public void get(KrollDict options,
+	public void get(final KrollDict options,final
 			@Kroll.argument(optional = true) KrollFunction mCallback) {
-		int timeout = 10000;
-		String url = null;
-		String useragent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:46.0) Gecko/20100101 Firefox/46.0";
-		String xpath = "//";
+		AsyncTask<Void, Void, Void> doRequest = new AsyncTask<Void, Void, Void>() {
+			@Override
+			protected Void doInBackground(Void[] arg0) {
+				int timeout = 10000;
+				String url = null;
+				String useragent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:46.0) Gecko/20100101 Firefox/46.0";
+				String xpath = "//body";
 
-		if (options.containsKey("timeout")) {
-			timeout = options.getInt("timeout");
-		}
-		if (options.containsKey("url")) {
-			url = options.getString("url");
-		}
-		if (options.containsKey("xpath")) {
-			xpath = options.getString("xpath");
-		}
-		if (options.containsKey("useragent")) {
-			useragent = options.getString("useragent");
-		}
-		try {
-			Document doc = Jsoup.connect(url).userAgent(useragent)
-					.timeout(timeout).ignoreContentType(true).get();
-			if (xpath != null) {
-				List<String> list = Xsoup.compile(xpath).evaluate(doc).list();
-				HashMap<String, Object> map = new HashMap<String, Object>();
-				map.put("list", list.toArray());
-				mCallback.call(getKrollObject(), map);
+				if (options.containsKey("timeout")) {
+					timeout = options.getInt("timeout");
+				}
+				if (options.containsKey("url")) {
+					url = options.getString("url");
+				}
+				if (options.containsKey("xpath")) {
+					xpath = options.getString("xpath");
+				}
+				if (options.containsKey("useragent")) {
+					useragent = options.getString("useragent");
+				}
+				List<String> list = null;
+				try {
+					Document doc = Jsoup.connect(url).userAgent(useragent)
+							.timeout(timeout).ignoreContentType(true).get();
+					if (xpath != null) {
+						list = Xsoup.compile(xpath).evaluate(doc).list();
+					}
+					KrollDict data = new KrollDict();
+					data.put("list", list.toArray());
+					data.put("success", true);
+					mCallback.call(ScraperModule.this.getKrollObject(), data);
+
+				} catch (MalformedURLException e) {
+					e.printStackTrace();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				return null;
 			}
-	
-		} catch (MalformedURLException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		};
+		doRequest.execute();
 
+		
 	}
-
 }
