@@ -10,28 +10,19 @@
 // http://billdawson.com/using-custom-titanium-modules-for-performance/
 package de.appwerft.scraper;
 
-import org.appcelerator.kroll.KrollModule;
-import org.appcelerator.kroll.KrollDict;
-import org.appcelerator.kroll.KrollFunction;
+import org.appcelerator.kroll.*;
 import org.appcelerator.kroll.annotations.Kroll;
-import org.appcelerator.titanium.TiApplication;
 import org.appcelerator.kroll.common.Log;
-//import org.appcelerator.kroll.common.TiConfig;
-import org.jsoup.Jsoup;
-//import org.jsoup.helper.Validate;
-import org.jsoup.nodes.Document;
-
+import org.appcelerator.titanium.TiApplication;
 import java.io.IOException;
+import android.os.AsyncTask;
 import java.net.MalformedURLException;
+import java.util.List;
 
+import org.jsoup.nodes.Document;
+import org.jsoup.Jsoup;
 import us.codecraft.xsoup.*;
 
-import java.util.List;
-import java.util.HashMap;
-
-import android.os.AsyncTask;
-
-import java.net.URL;
 
 @Kroll.module(name = "Scraper", id = "de.appwerft.scraper")
 public class ScraperModule extends KrollModule {
@@ -52,9 +43,10 @@ public class ScraperModule extends KrollModule {
 		// created
 	}
 
+	
 	// Methods
 	@Kroll.method
-	public void get(final KrollDict options,final
+	public void createScraper(final KrollDict options,final
 			@Kroll.argument(optional = true) KrollFunction mCallback) {
 		AsyncTask<Void, Void, Void> doRequest = new AsyncTask<Void, Void, Void>() {
 			@Override
@@ -77,27 +69,31 @@ public class ScraperModule extends KrollModule {
 					useragent = options.getString("useragent");
 				}
 				List<String> list = null;
+				KrollDict data = new KrollDict();
 				try {
 					Document doc = Jsoup.connect(url).userAgent(useragent)
 							.timeout(timeout).ignoreContentType(true).get();
 					if (xpath != null) {
 						list = Xsoup.compile(xpath).evaluate(doc).list();
 					}
-					KrollDict data = new KrollDict();
+					
 					data.put("list", list.toArray());
 					data.put("success", true);
 					mCallback.call(ScraperModule.this.getKrollObject(), data);
-
 				} catch (MalformedURLException e) {
+					data.put("success", false);
+					data.put("error", "MalformedURLException");
+					mCallback.call(ScraperModule.this.getKrollObject(), data);
 					e.printStackTrace();
 				} catch (IOException e) {
+					data.put("success", false);
+					data.put("error", "IOException");
+					mCallback.call(ScraperModule.this.getKrollObject(), data);
 					e.printStackTrace();
 				}
 				return null;
 			}
 		};
 		doRequest.execute();
-
-		
 	}
 }
