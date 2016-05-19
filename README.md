@@ -9,22 +9,26 @@ Usage
 
 ~~~
 require('de.appwerft.scraper').createScraper({
-    url : "http://dradiowissen.de/early-bird/p1",
-    rootXpath : "//body",   // default
+    url : "http://srv.deutschlandradio.de/aodlistaudio.1706.de.rpc?drau:station_id=4&drau:from=_DATE_&drau:to=_DATE_&drau:page=1&drau:limit=500",
+    rootXpath : "//entries",
+    useragent : "Das DRadio/6 CFNetwork/711.1.16 Darwin/14.0.0",
     subXpaths : {
-        title : "//figure[@class=teaser__image]/button/@data-title",
-        mp3 : "//figure[@class=teaser__image]/button/@data-mp3",
-        image : "//figure[@class=teaser__image]/a/img/@src"
-    },
-    timeout : 3000, // optional
-    useragent : "my sweet browser", // optional 
-},function(_e){
-      _e.list.forEach(function(_e){
-          console.log(_e.success);
-          console.log(_e.items);
-          console.log(_e.count);
-
-    });
+        url : "//item/@url",
+        author : "//item/author/text()",
+        title : "//item/title/text()",
+        id : "//item/@id",
+        sendung : "//item/sendung/text()",
+        sendungid : "//item/sendung/@id",
+        duration : "//item/@duration",
+        killtime : "//item/@killtime",
+        deliveryMode : "//item/@deliveryMode",	
+        datetime : "//item/datetime/text()" 
+    },function(_e){
+        _e.list.forEach(function(_e){
+            console.log(_e.success);
+            console.log(_e.items);
+            console.log(_e.count);
+      });
 });
 ~~~
 
