@@ -74,7 +74,6 @@ public class ScraperModule extends KrollModule {
 					filterList = (Map) options.getKrollDict("subXpaths");
 				}
 				KrollDict data = new KrollDict();
-				Log.d(LCAT, url);
 				try {
 					Document pageDoc = Jsoup.connect(url).userAgent(useragent)
 							.timeout(timeout).ignoreContentType(true).get();
@@ -83,14 +82,11 @@ public class ScraperModule extends KrollModule {
 					 */
 					Document rootDoc = Jsoup.parse(Xsoup.compile(rootXpath)
 							.evaluate(pageDoc).get());
-					Log.e(LCAT,rootDoc.toString());	
 					
 					List<HashMap<String, String>> resultList = getMatchesByFilter(
 							rootDoc, filterList);
-					Log.d("resultList", resultList.toString());
 					data.put("items", resultList.toArray());
 					data.put("count", resultList.size());
-					Log.d(LCAT, "count=" + resultList.size());
 					data.put("success", true);
 					mCallback.call(getKrollObject(), data);
 				} catch (MalformedURLException e) {
@@ -119,18 +115,13 @@ public class ScraperModule extends KrollModule {
 					String key = (String) pair.getKey();
 					String val = (String) pair.getValue();
 					/* getting all matches: */
-					Log.d(LCAT, "xpath=" + val);
-					Log.d(LCAT, "doc=" + rootDoc.toString());
-
+		
 					List<String> matchingList = Xsoup.compile(val)
 							.evaluate(rootDoc).list();
-					Log.d(LCAT, "matchingList=" + matchingList.toString());
 					/*
 					 * prefilling of resultlist with empty Maps (only at first
 					 * time = first match):
 					 */
-					Log.d(LCAT, "resultListSize=" + resultList.size()
-							+ "   matchingList.size=" + matchingList.size());
 					while (resultList.size() < matchingList.size()) {
 						resultList.add(new HashMap<String, String>());
 					}
