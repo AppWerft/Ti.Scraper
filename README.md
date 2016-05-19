@@ -10,7 +10,12 @@ Usage
 ~~~
 require('de.appwerft.scraper').createScraper({
     url : "http://dradiowissen.de/early-bird/p1",
-    xpath : "//figure[@class=teaser__image]/button",
+    rootXpath : "//figure[@class=teaser__image]/button",
+    childXpaths : {
+        title : "//button/@data-title",
+        mp3 : "//button/@data-mp3",
+        image : "//a/img/@src"
+    },
     timeout : 3000, // optional
     useragent : "my sweet browser", // optional 
 },function(_e){
@@ -21,7 +26,7 @@ require('de.appwerft.scraper').createScraper({
 });
 ~~~
 
-The module works asynchronously. Here you can find a typical [use case](https://github.com/AppWerft/DLRmediathek/blob/master/Resources/controls/earlybird.adapter.js). 
+The module works asynchronously. Here you can find a typical [use case](https://github.com/AppWerft/DLRmediathek/blob/master/Resources/controls/earlybird.adapter.js    ). 
 
 
 INSTALL YOUR MODULE

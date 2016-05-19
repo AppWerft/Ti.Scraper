@@ -14,19 +14,24 @@ import org.appcelerator.kroll.*;
 import org.appcelerator.kroll.annotations.Kroll;
 import org.appcelerator.kroll.common.Log;
 import org.appcelerator.titanium.TiApplication;
+
 import java.io.IOException;
+
 import android.os.AsyncTask;
+
 import java.net.MalformedURLException;
 import java.util.List;
+import java.util.Map;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.Jsoup;
 import us.codecraft.xsoup.*;
 
-
 @Kroll.module(name = "Scraper", id = "de.appwerft.scraper")
 public class ScraperModule extends KrollModule {
-
 	// Standard Debugging variables
 	private static final String LCAT = "ScraperModule";
 	public KrollFunction mCallback;
@@ -39,59 +44,92 @@ public class ScraperModule extends KrollModule {
 	@Kroll.onAppCreate
 	public static void onAppCreate(TiApplication app) {
 		Log.d(LCAT, "inside onAppCreate");
-		// put module init code that needs to run when the application is
-		// created
 	}
 
-	
 	// Methods
 	@Kroll.method
-	public void createScraper(final KrollDict options,final
-			@Kroll.argument(optional = true) KrollFunction mCallback) {
+	public void createScraper(final KrollDict options,
+			final @Kroll.argument(optional = true) KrollFunction mCallback) {
 		AsyncTask<Void, Void, Void> doRequest = new AsyncTask<Void, Void, Void>() {
+			@SuppressWarnings({ "unchecked", "rawtypes" })
 			@Override
 			protected Void doInBackground(Void[] arg0) {
 				int timeout = 10000;
 				String url = null;
 				String useragent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:46.0) Gecko/20100101 Firefox/46.0";
-				String xpath = "//body";
-
+				String rootXpath = null;
+				Map<String, String> filterList = null;
 				if (options.containsKey("timeout")) {
 					timeout = options.getInt("timeout");
 				}
 				if (options.containsKey("url")) {
 					url = options.getString("url");
 				}
-				if (options.containsKey("xpath")) {
-					xpath = options.getString("xpath");
-				}
 				if (options.containsKey("useragent")) {
 					useragent = options.getString("useragent");
 				}
-				List<String> list = null;
+				if (options.containsKey("rootXpath")) {
+					rootXpath = options.getString("rootXpath");
+				}
+				if (options.containsKey("childXpaths")) {
+					filterList = (Map) options.getKrollDict("childXpaths");
+				}
 				KrollDict data = new KrollDict();
 				try {
-					Document doc = Jsoup.connect(url).userAgent(useragent)
+					Document pageDoc = Jsoup.connect(url).userAgent(useragent)
 							.timeout(timeout).ignoreContentType(true).get();
-					if (xpath != null) {
-						list = Xsoup.compile(xpath).evaluate(doc).list();
-					}
-					
-					data.put("list", list.toArray());
+					Document rootDoc = Jsoup.parse(Xsoup.compile(rootXpath)
+							.evaluate(pageDoc).get());
+					List<HashMap<String, String>>  resultList = getMatchesByFilter(rootDoc, filterList);
+					Log.d("resultList",resultList.toString());
+					data.put("list", resultList.toArray());
+					data.put("size", resultList.size());
 					data.put("success", true);
-					mCallback.call(ScraperModule.this.getKrollObject(), data);
+					mCallback.call(getKrollObject(), data);
 				} catch (MalformedURLException e) {
-					data.put("success", false);
 					data.put("error", "MalformedURLException");
-					mCallback.call(ScraperModule.this.getKrollObject(), data);
+					mCallback.call(getKrollObject(), data);
 					e.printStackTrace();
 				} catch (IOException e) {
-					data.put("success", false);
 					data.put("error", "IOException");
-					mCallback.call(ScraperModule.this.getKrollObject(), data);
+					mCallback.call(getKrollObject(), data);
 					e.printStackTrace();
 				}
 				return null;
+			}
+
+			private List<HashMap<String, String>> getMatchesByFilter(
+					Document rootDoc, Map<String, String> filterList) {
+				/* definition of return var */
+				List<HashMap<String, String>> resultList = new ArrayList<HashMap<String, String>>();
+				@SuppressWarnings("rawtypes")
+				Iterator it = filterList.entrySet().iterator();
+				List<String> matchingList = null;
+				/* iterating thru sub xpath's (keys) */
+				while (it.hasNext()) {
+					@SuppressWarnings("rawtypes")
+					Map.Entry pair = (Map.Entry) it.next();
+					String key = (String) pair.getKey();
+					String val = (String) pair.getValue();
+					/* getting all matches: */
+					matchingList = Xsoup.compile(val).evaluate(rootDoc).list();
+					/*
+					 * prefilling of resultlist with empty Maps (only at first
+					 * time = first match):
+					 */
+					while (resultList.size() < matchingList.size()) {
+						resultList.add(new HashMap<String, String>());
+					}
+					/* iterating thru matchingList and inserting of match: */
+					int i = 0;
+					while (i < matchingList.size()) {
+						/* update map at position : */
+						resultList.get(i).put(key, val);
+						i++;
+					}
+					it.remove();
+				}
+				return resultList;
 			}
 		};
 		doRequest.execute();
