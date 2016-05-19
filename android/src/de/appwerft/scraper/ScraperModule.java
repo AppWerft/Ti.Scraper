@@ -33,10 +33,9 @@ import us.codecraft.xsoup.*;
 @Kroll.module(name = "Scraper", id = "de.appwerft.scraper")
 public class ScraperModule extends KrollModule {
 	// Standard Debugging variables
-	private static final String LCAT = "ScraperModule";
+	private static final String LCAT = "HTMLScraper";
 	public KrollFunction mCallback;
 
-	// @Kroll.constant public static final String EXTERNAL_NAME = value;
 	public ScraperModule() {
 		super();
 	}
@@ -46,7 +45,6 @@ public class ScraperModule extends KrollModule {
 		Log.d(LCAT, "inside onAppCreate");
 	}
 
-	// Methods
 	@Kroll.method
 	public void createScraper(final KrollDict options,
 			final @Kroll.argument(optional = true) KrollFunction mCallback) {
@@ -57,8 +55,9 @@ public class ScraperModule extends KrollModule {
 				int timeout = 10000;
 				String url = null;
 				String useragent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:46.0) Gecko/20100101 Firefox/46.0";
-				String rootXpath = null;
+				String rootXpath = "//body";
 				Map<String, String> filterList = new HashMap<String, String>();
+				/* reading of proxy properties: */
 				if (options.containsKey("timeout")) {
 					timeout = options.getInt("timeout");
 				}
@@ -75,15 +74,23 @@ public class ScraperModule extends KrollModule {
 					filterList = (Map) options.getKrollDict("subXpaths");
 				}
 				KrollDict data = new KrollDict();
+				Log.d(LCAT, url);
 				try {
 					Document pageDoc = Jsoup.connect(url).userAgent(useragent)
 							.timeout(timeout).ignoreContentType(true).get();
+					/* in pageDoc the unfiltered wegpage
+					 * rootPath extract a sub node
+					 */
 					Document rootDoc = Jsoup.parse(Xsoup.compile(rootXpath)
 							.evaluate(pageDoc).get());
-					List<HashMap<String, String>>  resultList = getMatchesByFilter(rootDoc, filterList);
-					Log.d("resultList",resultList.toString());
-					data.put("list", resultList.toArray());
-					data.put("size", resultList.size());
+					Log.e(LCAT,rootDoc.toString());	
+					
+					List<HashMap<String, String>> resultList = getMatchesByFilter(
+							rootDoc, filterList);
+					Log.d("resultList", resultList.toString());
+					data.put("items", resultList.toArray());
+					data.put("count", resultList.size());
+					Log.d(LCAT, "count=" + resultList.size());
 					data.put("success", true);
 					mCallback.call(getKrollObject(), data);
 				} catch (MalformedURLException e) {
@@ -104,7 +111,7 @@ public class ScraperModule extends KrollModule {
 				List<HashMap<String, String>> resultList = new ArrayList<HashMap<String, String>>();
 				@SuppressWarnings("rawtypes")
 				Iterator it = filterList.entrySet().iterator();
-				List<String> matchingList = null;
+
 				/* iterating thru sub xpath's (keys) */
 				while (it.hasNext()) {
 					@SuppressWarnings("rawtypes")
@@ -112,11 +119,18 @@ public class ScraperModule extends KrollModule {
 					String key = (String) pair.getKey();
 					String val = (String) pair.getValue();
 					/* getting all matches: */
-					matchingList = Xsoup.compile(val).evaluate(rootDoc).list();
+					Log.d(LCAT, "xpath=" + val);
+					Log.d(LCAT, "doc=" + rootDoc.toString());
+
+					List<String> matchingList = Xsoup.compile(val)
+							.evaluate(rootDoc).list();
+					Log.d(LCAT, "matchingList=" + matchingList.toString());
 					/*
 					 * prefilling of resultlist with empty Maps (only at first
 					 * time = first match):
 					 */
+					Log.d(LCAT, "resultListSize=" + resultList.size()
+							+ "   matchingList.size=" + matchingList.size());
 					while (resultList.size() < matchingList.size()) {
 						resultList.add(new HashMap<String, String>());
 					}
@@ -124,7 +138,7 @@ public class ScraperModule extends KrollModule {
 					int i = 0;
 					while (i < matchingList.size()) {
 						/* update map at position : */
-						resultList.get(i).put(key, val);
+						resultList.get(i).put(key, matchingList.get(i));
 						i++;
 					}
 					it.remove();
