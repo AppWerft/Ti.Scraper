@@ -11,7 +11,7 @@ Usage
 require('de.appwerft.scraper').createScraper({
     url : "http://dradiowissen.de/early-bird/p1",
     rootXpath : "//figure[@class=teaser__image]/button",
-    childXpaths : {
+    subXpaths : {
         title : "//button/@data-title",
         mp3 : "//button/@data-mp3",
         image : "//a/img/@src"
