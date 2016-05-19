@@ -10,18 +10,20 @@ Usage
 ~~~
 require('de.appwerft.scraper').createScraper({
     url : "http://dradiowissen.de/early-bird/p1",
-    rootXpath : "//figure[@class=teaser__image]/button",
+    rootXpath : "//body",   // default
     subXpaths : {
-        title : "//button/@data-title",
-        mp3 : "//button/@data-mp3",
-        image : "//a/img/@src"
+        title : "//figure[@class=teaser__image]/button/@data-title",
+        mp3 : "//figure[@class=teaser__image]/button/@data-mp3",
+        image : "//figure[@class=teaser__image]/a/img/@src"
     },
     timeout : 3000, // optional
     useragent : "my sweet browser", // optional 
 },function(_e){
       _e.list.forEach(function(_e){
           console.log(_e.success);
-          console.log(_e.list);
+          console.log(_e.items);
+          console.log(_e.count);
+
     });
 });
 ~~~
