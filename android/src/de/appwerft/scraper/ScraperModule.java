@@ -58,7 +58,7 @@ public class ScraperModule extends KrollModule {
 				String url = null;
 				String useragent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:46.0) Gecko/20100101 Firefox/46.0";
 				String rootXpath = null;
-				Map<String, String> filterList = null;
+				Map<String, String> filterList = new HashMap<String, String>();
 				if (options.containsKey("timeout")) {
 					timeout = options.getInt("timeout");
 				}
@@ -71,8 +71,8 @@ public class ScraperModule extends KrollModule {
 				if (options.containsKey("rootXpath")) {
 					rootXpath = options.getString("rootXpath");
 				}
-				if (options.containsKey("childXpaths")) {
-					filterList = (Map) options.getKrollDict("childXpaths");
+				if (options.containsKey("subXpaths")) {
+					filterList = (Map) options.getKrollDict("subXpaths");
 				}
 				KrollDict data = new KrollDict();
 				try {
