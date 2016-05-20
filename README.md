@@ -23,7 +23,8 @@ require('de.appwerft.scraper').createScraper({
         killtime : "//item/@killtime",
         deliveryMode : "//item/@deliveryMode",	
         datetime : "//item/datetime/text()" 
-    },function(_e){
+    }
+    },function(_e) {
         _e.list.forEach(function(_e){
             console.log(_e.success);
             console.log(_e.items);
@@ -33,6 +34,25 @@ require('de.appwerft.scraper').createScraper({
 ~~~
 
 The module works asynchronously. Here you can find a typical [use case](https://github.com/AppWerft/DLRmediathek/blob/master/Resources/controls/earlybird.adapter.js    ). 
+
+
+~~~
+require('de.appwerft.scraper').createScraper({
+    url : "http://srv.deutschlandradio.de/aodlistaudio.1706.de.rpc?drau:station_id=4&drau:from=_DATE_&drau:to=_DATE_&drau:page=1&drau:limit=500",
+    useragent : "Das DRadio/6 CFNetwork/711.1.16 Darwin/14.0.0",
+    filters : {
+        url : "item/@url",
+        datetime : "//item/datetime/text()" 
+    }
+    },function(_e) {
+    _e.list.forEach(function(_e){
+        console.log(_e.success);
+        console.log(_e.items);
+        console.log(_e.count);
+    }); 
+});
+~~~
+More jou can find [here in this cookbook](https://jsoup.org/cookbook/extracting-data/selector-syntax)
 
 
 INSTALL YOUR MODULE

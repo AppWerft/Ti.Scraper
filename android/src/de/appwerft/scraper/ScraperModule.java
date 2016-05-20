@@ -55,7 +55,7 @@ public class ScraperModule extends KrollModule {
 				int timeout = 10000;
 				String url = null;
 				String useragent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:46.0) Gecko/20100101 Firefox/46.0";
-				String rootXpath = "//body";
+				String rootXpath = null;
 				Map<String, String> filterList = new HashMap<String, String>();
 				/* reading of proxy properties: */
 				if (options.containsKey("timeout")) {
@@ -75,14 +75,15 @@ public class ScraperModule extends KrollModule {
 				}
 				KrollDict data = new KrollDict();
 				try {
+					Document rootDoc = null;
 					Document pageDoc = Jsoup.connect(url).userAgent(useragent)
 							.timeout(timeout).ignoreContentType(true).get();
-					/* in pageDoc the unfiltered wegpage
-					 * rootPath extract a sub node
-					 */
-					Document rootDoc = Jsoup.parse(Xsoup.compile(rootXpath)
-							.evaluate(pageDoc).get());
-					
+					if (rootXpath != null) {
+						rootDoc = Jsoup.parse(Xsoup.compile(rootXpath)
+								.evaluate(pageDoc).get());
+					} else {
+						rootDoc = pageDoc;
+					}
 					List<HashMap<String, String>> resultList = getMatchesByFilter(
 							rootDoc, filterList);
 					data.put("items", resultList.toArray());
@@ -103,25 +104,21 @@ public class ScraperModule extends KrollModule {
 
 			private List<HashMap<String, String>> getMatchesByFilter(
 					Document rootDoc, Map<String, String> filterList) {
-				/* definition of return var */
 				List<HashMap<String, String>> resultList = new ArrayList<HashMap<String, String>>();
 				@SuppressWarnings("rawtypes")
 				Iterator it = filterList.entrySet().iterator();
-
 				/* iterating thru sub xpath's (keys) */
+				// Log.d("DOC", rootDoc.toString());
 				while (it.hasNext()) {
 					@SuppressWarnings("rawtypes")
 					Map.Entry pair = (Map.Entry) it.next();
 					String key = (String) pair.getKey();
-					String val = (String) pair.getValue();
+					String filter = (String) pair.getValue();
 					/* getting all matches: */
-		
-					List<String> matchingList = Xsoup.compile(val)
+
+					List<String> matchingList = Xsoup.compile(filter)
 							.evaluate(rootDoc).list();
-					/*
-					 * prefilling of resultlist with empty Maps (only at first
-					 * time = first match):
-					 */
+					// Log.d("MATCH", key + "=" + matchingList.toString());
 					while (resultList.size() < matchingList.size()) {
 						resultList.add(new HashMap<String, String>());
 					}
