@@ -28,6 +28,7 @@ import java.util.Iterator;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.Jsoup;
+
 import us.codecraft.xsoup.*;
 
 @Kroll.module(name = "Scraper", id = "de.appwerft.scraper")
@@ -48,6 +49,7 @@ public class ScraperModule extends KrollModule {
 	@Kroll.method
 	public void createScraper(final KrollDict options,
 			final @Kroll.argument(optional = true) KrollFunction mCallback) {
+
 		AsyncTask<Void, Void, Void> doRequest = new AsyncTask<Void, Void, Void>() {
 			@SuppressWarnings({ "unchecked", "rawtypes" })
 			@Override
@@ -64,6 +66,9 @@ public class ScraperModule extends KrollModule {
 				if (options.containsKey("url")) {
 					url = options.getString("url");
 				}
+				if (options.containsKey("timeout")) {
+					timeout = options.getInt("timeout");
+				}
 				if (options.containsKey("useragent")) {
 					useragent = options.getString("useragent");
 				}
@@ -73,11 +78,20 @@ public class ScraperModule extends KrollModule {
 				if (options.containsKey("subXpaths")) {
 					filterList = (Map) options.getKrollDict("subXpaths");
 				}
+					
 				KrollDict data = new KrollDict();
+				
+				KrollDict resultDict = new KrollDict();
+				
 				try {
 					Document rootDoc = null;
 					Document pageDoc = Jsoup.connect(url).userAgent(useragent)
-							.timeout(timeout).ignoreContentType(true).get();
+							.timeout(timeout).ignoreHttpErrors(true).ignoreContentType(true).get();
+					if (pageDoc== null) {
+						data.put("error",true);
+						mCallback.call(getKrollObject(),data);
+						return null;
+					}
 					if (rootXpath != null) {
 						rootDoc = Jsoup.parse(Xsoup.compile(rootXpath)
 								.evaluate(pageDoc).get());
@@ -133,7 +147,7 @@ public class ScraperModule extends KrollModule {
 				}
 				return resultList;
 			}
-		};
+		};// async task
 		doRequest.execute();
 	}
 }
