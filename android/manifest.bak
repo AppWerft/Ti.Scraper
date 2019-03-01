@@ -1,0 +1,18 @@
+#
+# this is your module manifest and used by Titanium
+# during compilation, packaging, distribution, etc.
+#
+version: 1.0.5
+apiversion: 2
+architectures: armeabi armeabi-v7a x86
+description: Webpage scraper, uses xpath to filter
+author: Rainer Schleevoigt
+license: Specify your license
+copyright: Apache
+
+# these should not be edited
+name: WebScraper
+moduleid: de.appwerft.scraper
+guid: 2f9c5da5-6be8-47a7-bddb-c268e00d14ae
+platform: android
+minsdk: 5.2.0.
